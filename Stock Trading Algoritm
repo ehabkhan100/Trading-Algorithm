@@ -1,0 +1,40 @@
+import yfinance as yf
+
+# define the stock ticker symbol and date range
+symbol = "AAPL"
+start_date = "2022-01-01"
+end_date = "2022-03-31"
+
+# get historical stock data from Yahoo Finance
+stock_data = yf.download(symbol, start=start_date, end=end_date)
+
+# calculate the 50-day moving averagef
+stock_data["SMA50"] = stock_data["Close"].rolling(window=50).mean()
+
+# initialize variables for tracking positions and profit/loss
+current_position = None
+total_profit_loss = 0
+
+# loop through each day in the data
+for i in range(len(stock_data)):
+    # get the current date and closing price
+    current_date = stock_data.index[i]
+    current_price = stock_data["Close"][i]
+    sma50 = stock_data["SMA50"][i]
+    
+    # if we're not currently in a position and the price is above the 50-day moving average, buy
+    if current_position is None and current_price > sma50:
+        current_position = "long"
+        entry_price = current_price
+        print(f"Bought {symbol} at {entry_price} on {current_date}")
+    
+    # if we're currently long and the price drops below the 50-day moving average, sell
+    elif current_position == "long" and current_price < sma50:
+        current_position = None
+        exit_price = current_price
+        profit_loss = exit_price - entry_price
+        total_profit_loss += profit_loss
+        print(f"Sold {symbol} at {exit_price} on {current_date} for a profit/loss of {profit_loss}")
+    
+# print the total profit/loss for the trading period
+print(f"Total profit/loss for {symbol} between {start_date} and {end_date}: {total_profit_loss}")
